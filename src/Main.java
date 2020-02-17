@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -25,7 +26,6 @@ public class Main {
     private static MyFile[] files;/*add static from Hoa - key static  - needn't create object Main*/
 
     /*default element of MyFile[] = null when restart or renew program*/
-
     public Main() {
         files = null;
     }
@@ -52,10 +52,10 @@ public class Main {
 
         //check content[] element
         for (File file : content) {
-            if (file.isFile() == true) {
-                if (file.getName().endsWith("docx") || file.getName().endsWith("txt")) {
+            if (file.isFile()) {
+//                if (file.getName().endsWith("docx") || file.getName().endsWith("txt")) {
                     listFiles.add(new MyFile(file.getName(), file.length(), file.getAbsolutePath()));//add name, size, path
-                }
+//                }
             } else {
                 loadFiles(file.getAbsolutePath(), listFiles);//if file is not -> it's irectory -> recall loadFiles(x, y) method -> load 
             }
@@ -80,20 +80,20 @@ public class Main {
     public void selectionSort() {
         /*You should insert code for sorting here, you are going to sort the list of
          loaded files named "files" ascending by file size.*/
-
+        //check all of element in files[] from 0 -> n - 1
         for (int i = 0; i < files.length - 1; i++) {
-            int min = i;
-            for (int j = i + 1; j < files.length; j++) {
+            int min = i;//default first element is min
+            for (int j = i + 1; j < files.length; j++) {//get all of elements from 1 to n
                 if (files[j].getSize() < files[min].getSize()) {
-                    min = j;
+                    min = j;// get min element
                 }
             }
+            //swap two element
             MyFile temp = files[min];
             files[min] = files[i];
             files[i] = temp;
 
         }
-
     }
 
     //sort the list of files ascending by size (use insertion sort)
@@ -101,33 +101,35 @@ public class Main {
         //do nothing if list of files is empty
         /*You should insert code for sorting here, you are going to sort the list of
          loaded files named "files" ascending by file size.*/
-        for (int i = 0; i < files.length; i++) {
-            MyFile current = files[i];
-            int j = i - 1;
-            while (j >= 0 && files[j].getSize() >= current.getSize()) {
-                files[j + 1] = files[j];
+        for (int i = 0; i < files.length; i++) {//get all of element in files[]
+            MyFile current = files[i];//to begin first element is condidered fully sorted
+            int j = i - 1;//from the remaining numbers the leftmost - 1 is taken out and compare to the already sorted number to its right
+            while (j >= 0 && files[j].getSize() >= current.getSize()) {//if the already sorted element is larger the two numbers -> swap
+                files[j + 1] = files[j];//loop until j < 0 - swap
                 j--;
             }
-            files[j + 1] = current;
+            files[j + 1] = current;//insert ~ swap
         }
     }
 
     public void quickSort(MyFile[] files, int left, int right) {
         
-       if(left >= right){
+       if(left >= right){//in case array have 1 element
            return;
        }
        
-       int pivot = (int) files[(left + right) / 2].getSize();
-       int i = left;
-       int j = right;
-       while(i < j){
-           while(files[i].getSize() < pivot){
+       int pivot = (int) files[(left + right) / 2].getSize();//pivot = middle element
+       int i = left;//first element
+       int j = right;//last element
+       
+       do{
+           while(files[i].getSize() < pivot){//compare first element and middle element -> if true -> increase 1 from i
                i++;
            }
-           while(files[j].getSize() > pivot){
+           while(files[j].getSize() > pivot){//compare last element and middle element -> if true -> decrease 1 from j
                j--;
            }
+           //loop above stop -> swapppppppppp
            if(i <= j){
                MyFile temp = files[i];
                files[i] = files[j];
@@ -135,9 +137,14 @@ public class Main {
                i++;
                j--;
            }
-       }
-        quickSort(files, left, j);
-        quickSort(files, i, right);
+       }while(i < j); //stop when j = i
+       //recusion -> save stack in line 145 
+//       if(left < j){
+            quickSort(files, left, j);
+//        }
+//       if(i < right){ 
+           quickSort(files, i, right); //lưu chỉ thị lệnh và giá trị của các biến local
+//       }
     }
 
    
@@ -158,14 +165,16 @@ public class Main {
     //return true if given MyFile contains given keyword, otherwise return false
     public boolean searchFile(MyFile mf, String keyword) throws IOException, FileNotFoundException {
 
-        //lay name cua phan tu trong mang luc loadfile -> chuyen thanh chu thuong . . .
+        //get name in form lower and get extension. . .
         if (mf.getName().toLowerCase().endsWith(".txt")) {
+            
             try {
-                LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(mf.getFullPath()));
+                //LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(mf.getFullPath()));
+                BufferedReader br = new BufferedReader(new FileReader(mf.getFullPath()));
                 String line;
-                //chay den cuoi dong 
-                while ((line = lineNumberReader.readLine()) != null) {
-                    //kiem tra tung dong neu co chua ki tu keyword
+                //run to last line 
+                while ((line = br.readLine()) != null) {
+                    //check each line if contain keyword
                     if (line.contains(keyword.toUpperCase()) || line.contains(keyword.toLowerCase())) {//
                         return true;
                     }
@@ -174,22 +183,21 @@ public class Main {
                 System.out.println("Error");
             }
         }
-
         return false;
     }
 
     //output information of all files which content has given keyword
     public void searchFile(String keyword) throws IOException {
         //save all files which matched given keyword to the list and output the list
-        List<MyFile> listFiles = new ArrayList<>();//luu cac file minh tim ra neu thoa dieu kien
-        for (MyFile f : files) { //lay tung phan tu trong mang files
+        List<MyFile> listFiles = new ArrayList<>();//save file found if pass condition
+        for (MyFile f : files) { //take each element in files[]
             if (searchFile(f, keyword)) {
                 listFiles.add(f);
             }
         }
-        //tim ra file do nhung file dang la luong nen phai chuyen thanh mang de show ra man hinh
+        //change thread of file to array
         MyFile[] foundFiles = listFiles.stream().toArray(MyFile[]::new);
-        list(foundFiles);//hien thi fille da tim ra
+        list(foundFiles);//show file found
     }
 
     /**
