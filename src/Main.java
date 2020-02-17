@@ -4,7 +4,6 @@
  * and open the template in the editor.
  */
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -25,9 +24,13 @@ public class Main {
     //contains a list of MyFile
     private static MyFile[] files;/*add static from Hoa - key static  - needn't create object Main*/
 
+    private static MyFile[] filesText;
+    private static final List<MyFile> listFileText = new ArrayList<>();
     /*default element of MyFile[] = null when restart or renew program*/
+
     public Main() {
         files = null;
+        filesText = null;
     }
 
     //get information of all text files under given folder name
@@ -38,6 +41,7 @@ public class Main {
         //khi mo files -> tao thanh 1 luong - stream -> chuyen thanh mang de truy cap vao nhung phan tu trong mang
         files = listFiles.stream().toArray(MyFile[]::new);/*files is array - so change MyFile (arraylist) to array */
 
+        filesText = listFileText.stream().toArray(MyFile[]::new);
     }
 
     /**
@@ -52,10 +56,13 @@ public class Main {
 
         //check content[] element
         for (File file : content) {
-            if (file.isFile()) {
-//                if (file.getName().endsWith("docx") || file.getName().endsWith("txt")) {
-                    listFiles.add(new MyFile(file.getName(), file.length(), file.getAbsolutePath()));//add name, size, path
-//                }
+            if (file.isFile() == true) {
+
+                listFiles.add(new MyFile(file.getName(), file.length(), file.getAbsolutePath()));//add name, size, path
+
+                if (file.getName().endsWith("docx") || file.getName().endsWith("txt")) {
+                    listFileText.add(new MyFile(file.getName(), file.length(), file.getAbsolutePath()));
+                }
             } else {
                 loadFiles(file.getAbsolutePath(), listFiles);//if file is not -> it's irectory -> recall loadFiles(x, y) method -> load 
             }
@@ -81,19 +88,20 @@ public class Main {
         /*You should insert code for sorting here, you are going to sort the list of
          loaded files named "files" ascending by file size.*/
         //check all of element in files[] from 0 -> n - 1
-        for (int i = 0; i < files.length - 1; i++) {
+        for (int i = 0; i < filesText.length - 1; i++) {
             int min = i;//default first element is min
-            for (int j = i + 1; j < files.length; j++) {//get all of elements from 1 to n
-                if (files[j].getSize() < files[min].getSize()) {
+            for (int j = i + 1; j < filesText.length; j++) {//get all of elements from 1 to n
+                if (filesText[j].getSize() < filesText[min].getSize()) {
                     min = j;// get min element
                 }
             }
             //swap two element
-            MyFile temp = files[min];
-            files[min] = files[i];
-            files[i] = temp;
+            MyFile temp = filesText[min];
+            filesText[min] = filesText[i];
+            filesText[i] = temp;
 
         }
+
     }
 
     //sort the list of files ascending by size (use insertion sort)
@@ -113,41 +121,35 @@ public class Main {
     }
 
     public void quickSort(MyFile[] files, int left, int right) {
-        
-       if(left >= right){//in case array have 1 element
-           return;
-       }
-       
-       int pivot = (int) files[(left + right) / 2].getSize();//pivot = middle element
-       int i = left;//first element
-       int j = right;//last element
-       
-       do{
-           while(files[i].getSize() < pivot){//compare first element and middle element -> if true -> increase 1 from i
-               i++;
-           }
-           while(files[j].getSize() > pivot){//compare last element and middle element -> if true -> decrease 1 from j
-               j--;
-           }
-           //loop above stop -> swapppppppppp
-           if(i <= j){
-               MyFile temp = files[i];
-               files[i] = files[j];
-               files[j] = temp;
-               i++;
-               j--;
-           }
-       }while(i < j); //stop when j = i
-       //recusion -> save stack in line 145 
-//       if(left < j){
-            quickSort(files, left, j);
-//        }
-//       if(i < right){ 
-           quickSort(files, i, right); //lưu chỉ thị lệnh và giá trị của các biến local
-//       }
-    }
 
-   
+        if (left >= right) {//in case array have 1 element
+            return;
+        }
+
+        int pivot = (int) files[(left + right) / 2].getSize();//pivot = middle element
+        int i = left;//first element
+        int j = right;//last element
+
+        do {
+            while (files[i].getSize() < pivot) {//compare first element and middle element -> if true -> increase 1 from i
+                i++;
+            }
+            while (files[j].getSize() > pivot) {//compare last element and middle element -> if true -> decrease 1 from j
+                j--;
+            }
+            //loop above stop -> swapppppppppp
+            if (i <= j) {
+                MyFile temp = files[i];
+                files[i] = files[j];
+                files[j] = temp;
+                i++;
+                j--;
+            }
+        } while (i < j); //stop when j = i
+        //recusion -> save stack in line 145                                  
+        quickSort(files, left, j);
+        quickSort(files, i, right); //lưu chỉ thị lệnh và giá trị của các biến local
+    }
 
     //sort and output sorted list of text files
     public void sort(SortType st) {
@@ -156,10 +158,10 @@ public class Main {
         } else if (st == SortType.SELECTIONSORT) {
             selectionSort();
         } else if (st == SortType.QUICKSORT) {
-            quickSort(files, 0, files.length - 1) ;
+            quickSort(files, 0, files.length - 1);
         }
         //output result after sorting
-        list(files);
+        list(filesText);
     }
 
     //return true if given MyFile contains given keyword, otherwise return false
@@ -167,13 +169,11 @@ public class Main {
 
         //get name in form lower and get extension. . .
         if (mf.getName().toLowerCase().endsWith(".txt")) {
-            
             try {
-                //LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(mf.getFullPath()));
-                BufferedReader br = new BufferedReader(new FileReader(mf.getFullPath()));
+                LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(mf.getFullPath()));
                 String line;
                 //run to last line 
-                while ((line = br.readLine()) != null) {
+                while ((line = lineNumberReader.readLine()) != null) {
                     //check each line if contain keyword
                     if (line.contains(keyword.toUpperCase()) || line.contains(keyword.toLowerCase())) {//
                         return true;
@@ -292,6 +292,7 @@ public class Main {
                     break;
                 }
                 case 0: {
+                    System.out.println("Thank you <3 !!!");
                     return;
                 }
 
